@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 function AdminLogin() {
     const navigate = useNavigate();
 
+    const API_URL = "https://ethnicart.onrender.com/api";
     const [mobile, setMobile] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -17,7 +18,7 @@ function AdminLogin() {
 
         try {
             const response = await fetch(
-                "http://localhost:8000/api/admin/login",
+                `${API_URL}/admin/login`,
                 {
                     method: "POST",
                     headers: {
