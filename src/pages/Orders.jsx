@@ -7,21 +7,25 @@ const Orders = () => {
   const { user } = useContext(AuthContext);
 
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // =====================================================
   // LOAD USER ORDERS
   // =====================================================
 
-  const API_URL = import.meta.env.VITE_API_URL || "https://ethnicart.onrender.com/api";
+  const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
   const loadOrders = async () => {
     if (!user?.id) {
       setOrders([]);
+      setLoading(false);
       return;
     }
 
     try {
+      setLoading(true);
+
       if (!token) {
         console.error("Authentication token missing");
         return;
@@ -48,6 +52,8 @@ const Orders = () => {
     } catch (error) {
       console.error("Failed to load orders:", error);
       setOrders([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -229,7 +235,42 @@ const Orders = () => {
             NO ORDERS
         ================================================= */}
 
-        {orders.length === 0 ? (
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="bg-white border border-gray-200 rounded-xl p-5 animate-pulse"
+              >
+                {/* Top bar */}
+                <div className="flex justify-between mb-5">
+                  <div className="space-y-2">
+                    <div className="h-2.5 w-16 bg-gray-200 rounded" />
+                    <div className="h-4 w-28 bg-gray-200 rounded" />
+                  </div>
+
+                  <div className="h-6 w-20 bg-gray-200 rounded-full" />
+                </div>
+
+                {/* Order body */}
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 bg-gray-200 rounded-lg shrink-0" />
+
+                  <div className="flex-1 space-y-3">
+                    <div className="h-4 w-48 bg-gray-200 rounded" />
+                    <div className="h-3 w-20 bg-gray-200 rounded" />
+                    <div className="h-3 w-28 bg-gray-200 rounded" />
+                  </div>
+
+                  <div className="hidden sm:block">
+                    <div className="h-9 w-24 bg-gray-200 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : orders.length === 0 ? (
+
           <div className="bg-white border border-gray-200 rounded-2xl p-8 sm:p-12 text-center">
 
             <div className="w-16 h-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center text-3xl mb-4">
@@ -318,17 +359,14 @@ const Orders = () => {
                         </span>
 
                         <span className="text-xs sm:text-sm text-gray-600">
-                          {order.date
-                            ? new Date(
-                                order.date
-                              ).toLocaleDateString(
-                                "en-IN",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                }
-                              )
+                          {order.createdAt
+                            ? new Date(order.createdAt).toLocaleString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                             : "N/A"}
                         </span>
                       </div>
@@ -463,11 +501,11 @@ const Orders = () => {
                               to={`/orders/${order.orderId}`}
                               className="px-3 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-xs sm:text-sm font-semibold hover:bg-blue-100 transition"
                             >
-                              🚚 Track
+                             Track
                             </Link>
                           )}
 
-                        {canCancelOrder(
+                        {/*canCancelOrder(
                           status
                         ) && (
                           <button
@@ -480,7 +518,7 @@ const Orders = () => {
                           >
                             Cancel
                           </button>
-                        )}
+                        )*/}
 
                       </div>
                     </div>

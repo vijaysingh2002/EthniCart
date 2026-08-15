@@ -19,13 +19,13 @@ import { CartContext } from "../context/CartContext";
 import { WishlistContext } from "../context/WishlistContext";
 import { AuthContext } from "../context/AuthContext";
 
-const API_URL = "https://ethnicart.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Product = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { addToCart } = useContext(CartContext);
+  const { cart, addToCart, increaseQuantity, decreaseQuantity } = useContext(CartContext);
 
   const {
     addToWishlist,
@@ -35,7 +35,6 @@ const Product = () => {
 
   const { user } = useContext(AuthContext);
 
-  const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +51,7 @@ const Product = () => {
         );
 
         const data = await response.json();
-
+        console.log("prod", data);
         if (!response.ok) {
           throw new Error(data.message || "Product not found");
         }
@@ -131,15 +130,23 @@ const Product = () => {
 
   const liked = isInWishlist(product.id);
 
-  const increaseQuantity = () => {
-    setQuantity((current) => current + 1);
-  };
+  const cartItem = cart.find(
+    (item) => String(item.id) === String(product.id)
+  );
 
-  const decreaseQuantity = () => {
-    setQuantity((current) =>
-      current > 1 ? current - 1 : 1
-    );
-  };
+  const quantity = cartItem?.quantity || 0;
+
+  const stock = Number(product.stock ?? 0);
+
+  const isOutOfStock = stock <= 0;
+  const isLowStock = stock > 0 && stock <= 5;
+  const canIncrease = quantity < stock;
+
+  const handleDecreaseQuantity = () => {
+  if (quantity > 0) {
+    decreaseQuantity(product.id);
+  }
+};
 
   const handleAddToCart = () => {
     if (!user) {
@@ -148,12 +155,19 @@ const Product = () => {
           from: `/product/${product.id}`,
         },
       });
+      
+      return;
+    }
+    
+    if (isOutOfStock) {
       return;
     }
 
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product);
+    if (quantity >= stock) {
+      return;
     }
+
+    addToCart(product);
   };
 
   const handleWishlist = () => {
@@ -174,20 +188,29 @@ const Product = () => {
   };
 
   const handleBuyNow = () => {
+    if (isOutOfStock) {
+      return;
+    }
+
+    if (quantity > stock) {
+      return;
+    }
+
     if (!user) {
       navigate("/login", {
         state: {
           from: `/product/${product.id}`,
         },
       });
+
       return;
     }
 
-    for (let i = 0; i < quantity; i++) {
+    if (quantity === 0) {
       addToCart(product);
     }
 
-    navigate("/cart");
+    navigate("/checkout");
   };
 
   /*const relatedProducts = products
@@ -406,15 +429,37 @@ const Product = () => {
             {/* AVAILABILITY */}
             <div className="flex items-center gap-2 mt-6">
 
-              <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+              <span
+                className={`w-2.5 h-2.5 rounded-full ${
+                  isOutOfStock
+                    ? "bg-red-500"
+                    : isLowStock
+                    ? "bg-orange-500"
+                    : "bg-green-500"
+                }`}
+              />
 
-              <span className="text-sm font-semibold text-green-700">
-                In Stock
+              <span
+                className={`text-sm font-semibold ${
+                  isOutOfStock
+                    ? "text-red-600"
+                    : isLowStock
+                    ? "text-orange-600"
+                    : "text-green-700"
+                }`}
+              >
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : isLowStock
+                  ? `Only ${stock} left`
+                  : "In Stock"}
               </span>
 
-              <span className="text-sm text-gray-400">
-                • Ready to ship
-              </span>
+              {!isOutOfStock && (
+                <span className="text-sm text-gray-400">
+                  • Ready to ship
+                </span>
+              )}
 
             </div>
 
@@ -422,60 +467,70 @@ const Product = () => {
             <div className="mt-7">
 
               <div className="flex items-center justify-between mb-3">
-
-                <p className="text-sm font-semibold text-gray-700">
-                  Quantity
-                </p>
-
                 <p className="text-sm text-gray-400">
                   Total:{" "}
                   <span className="font-semibold text-gray-700">
                     ₹{totalPrice.toLocaleString("en-IN")}
                   </span>
                 </p>
-
-              </div>
-
-              <div className="flex items-center w-fit bg-white border border-gray-200 rounded-xl overflow-hidden">
-
-                <button
-                  type="button"
-                  onClick={decreaseQuantity}
-                  aria-label="Decrease quantity"
-                  className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
-                >
-                  <FiMinus size={17} />
-                </button>
-
-                <span className="w-12 sm:w-14 text-center font-bold text-gray-900">
-                  {quantity}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={increaseQuantity}
-                  aria-label="Increase quantity"
-                  className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
-                >
-                  <FiPlus size={17} />
-                </button>
-
               </div>
 
             </div>
 
             {/* ACTIONS */}
             <div className="grid grid-cols-[1fr_auto] gap-3 mt-7">
+              {quantity === 0 ? (
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={isOutOfStock}
+                  className={`min-h-13 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-sm ${
+                    isOutOfStock
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-900 text-white hover:bg-[#C49A6C]"
+                  }`}
+                >
+                  <FiShoppingBag size={19} />
 
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="bg-gray-900 text-white min-h-13 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#C49A6C] transition-all duration-300 shadow-sm"
-              >
-                <FiShoppingBag size={19} />
-                Add to Cart
-              </button>
+                  {isOutOfStock
+                    ? "Out of Stock"
+                    : "Add to Cart"}
+                </button>
+              )  : (
+                <div className="bg-gray-900 text-white min-h-13 rounded-xl font-semibold flex items-center justify-between px-4 shadow-sm">
 
+                  {/* DECREASE */}
+                  <button
+                    type="button"
+                    onClick={() => decreaseQuantity(product.id)}
+                    className="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-xl"
+                  >
+                    −
+                  </button>
+
+                  {/* COUNT */}
+                  <span className="text-lg font-bold">
+                    {quantity}
+                  </span>
+
+                  {/* INCREASE */}
+                  <button
+                    type="button"
+                    onClick={() => increaseQuantity(product.id)}
+                    disabled={!canIncrease}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
+                      canIncrease
+                        ? "bg-[#C49A6C] hover:bg-[#b78958] text-white"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
+                  >
+                    +
+                  </button>
+
+                </div>
+              )}
+
+              {/* WISHLIST */}
               <button
                 type="button"
                 onClick={handleWishlist}
@@ -502,9 +557,14 @@ const Product = () => {
             <button
               type="button"
               onClick={handleBuyNow}
-              className="w-full mt-3 min-h-13 rounded-xl bg-[#C49A6C] hover:bg-[#a98259] text-white font-semibold transition-all duration-300"
+              disabled={isOutOfStock}
+              className={`w-full mt-3 min-h-13 rounded-xl text-white font-semibold transition-all duration-300 ${
+                isOutOfStock
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-[#C49A6C] hover:bg-[#a98259]"
+              }`}
             >
-              Buy Now
+              {isOutOfStock ? "Available Soon" : "Buy Now"}
             </button>
 
             {/* PRODUCT INFO */}

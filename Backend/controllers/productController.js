@@ -9,16 +9,17 @@ const addProduct = async (req, res) => {
       name,
       price,
       oldPrice,
+      stock,
       rating,
       category,
       badge,
       description,
     } = req.body;
 
-    if (!name || !price || !category || !req.file) {
+    if (!name || !price || !category || !req.file || stock == undefined) {
       return res.status(400).json({
         success: false,
-        message: "Name, price and image are required",
+        message: "Name, pric, stock and image are required",
       });
     }
 
@@ -26,6 +27,7 @@ const addProduct = async (req, res) => {
       name,
       price,
       oldPrice,
+      stock,
       rating,
       category,
       badge,
@@ -43,6 +45,7 @@ const addProduct = async (req, res) => {
         category: product.category,
         price: product.price,
         oldPrice: product.oldPrice,
+        stock: product.stock,
         rating: product.rating,
         image: product.image,
         badge: product.badge,
@@ -72,6 +75,7 @@ const getProducts = async (req, res) => {
       category: product.category,
       price: product.price,
       oldPrice: product.oldPrice,
+      stock: product.stock,
       rating: product.rating,
       image: product.image,
       badge: product.badge,
@@ -111,6 +115,7 @@ const getProductById = async (req, res) => {
         category: product.category,
         price: product.price,
         oldPrice: product.oldPrice,
+        stock: product.stock,
         rating: product.rating,
         image: product.image,
         badge: product.badge,
@@ -141,6 +146,7 @@ const editProduct = async (req, res) => {
       name,
       price,
       oldPrice,
+      stock,
       rating,
       category,
       badge,
@@ -150,6 +156,7 @@ const editProduct = async (req, res) => {
     if (name != undefined) product.name = name;
     if (price != undefined) product.price = price;
     if (oldPrice != undefined) product.oldPrice = oldPrice;
+    if (stock != undefined) product.stock = stock;
     if (rating != undefined) product.rating = rating;
     if (category != undefined) product.category = category;
     if (badge != undefined) product.badge = badge;
@@ -180,6 +187,7 @@ const editProduct = async (req, res) => {
         category: product.category,
         price: product.price,
         oldPrice: product.oldPrice,
+        stock: product.stock,
         rating: product.rating,
         image: product.image,
         badge: product.badge,

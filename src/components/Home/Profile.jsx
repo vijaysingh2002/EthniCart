@@ -461,25 +461,6 @@ const Profile = () => {
       type: "link",
     },
     {
-      title: "Your Addresses",
-      description: "Manage your delivery addresses",
-      icon: FiMapPin,
-      link: "/addresses",
-      type: "link",
-    },
-    {
-      title: "Payment Methods",
-      description: "Manage your saved payment options",
-      icon: FiCreditCard,
-      type: "disabled",
-    },
-    {
-      title: "Coupons & Offers",
-      description: "View available discounts and offers",
-      icon: FiTag,
-      type: "disabled",
-    },
-    {
       title: "Account Settings",
       description: "Manage your account preferences",
       icon: FiSettings,
@@ -492,6 +473,25 @@ const Profile = () => {
        icon: FiHelpCircle,
        link: "/help-support",
        type: "link",
+    },
+    {
+      title: "Your Addresses",
+      description: "Manage your delivery addresses",
+      icon: FiMapPin,
+      link: "/addresses",
+      type: "disabled",
+    },
+    {
+      title: "Payment Methods",
+      description: "Manage your saved payment options",
+      icon: FiCreditCard,
+      type: "disabled",
+    },
+    {
+      title: "Coupons & Offers",
+      description: "View available discounts and offers",
+      icon: FiTag,
+      type: "disabled",
     },
   ];
 

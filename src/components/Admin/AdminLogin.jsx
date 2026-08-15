@@ -8,8 +8,8 @@ function AdminLogin() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
-    const ADMIN_EMAIL = "admin@gmail.com";
-    const ADMIN_PASSWORD = "admin";
+    const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+    const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
 
     const handleSubmit = (e) => {
         e.preventDefault();

@@ -6,6 +6,8 @@ import {
   Navigate,
 } from "react-router-dom";
 
+import { useContext } from "react";
+import { AuthContext } from "./context/AuthContext";
 import Navbar from "./components/Layout/Navbar";
 import Footer from "./components/Layout/Footer";
 
@@ -36,6 +38,7 @@ import AdminLogin from "./components/Admin/AdminLogin";
 import AdminLayout from "./components/Admin/AdminLayout";
 import AdminProtectedRoute from "./components/Admin/ProtectedRoute";
 
+
 // =========================
 // USER LAYOUT
 // =========================
@@ -53,6 +56,12 @@ const UserLayout = () => {
   );
 };
 
+
+const RootPage = () => {
+  const { user } = useContext(AuthContext);
+
+  return user ? <Shop /> : <Home />;
+};
 // =========================
 // APP
 // =========================
@@ -69,7 +78,7 @@ function App() {
 
           {/* PUBLIC */}
 
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<RootPage />} />
 
           <Route path="/login" element={<Login />} />
 
@@ -82,9 +91,7 @@ function App() {
           <Route
             path="/shop"
             element={
-              <ProtectedRoute>
-                <Shop />
-              </ProtectedRoute>
+              <Navigate to="/" replace />
             }
           />
 

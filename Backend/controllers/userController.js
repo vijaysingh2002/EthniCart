@@ -79,7 +79,7 @@ const signup = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { phone, password } = req.body;
-    console.log("jalwa");
+    
     if (!phone || !password) {
       return res.status(400).json({
         success: false,
@@ -88,7 +88,7 @@ const login = async (req, res) => {
     }
 
     const user = await User.findOne({ phone });
-    console.log("user", user);
+    
     if (!user) {
       return res.status(401).json({
         success: false,

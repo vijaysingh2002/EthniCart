@@ -80,7 +80,7 @@ const OrderSuccess = () => {
                       </p>
 
                       <p className="font-bold text-gray-900 mt-1 break-all">
-                        {order.id}
+                        {order[0].orderId}
                       </p>
                     </div>
 
@@ -102,7 +102,7 @@ const OrderSuccess = () => {
                       </p>
 
                       <span className="inline-flex items-center mt-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold">
-                        {order.status || "Pending"}
+                        {order[0].status || "Pending"}
                       </span>
                     </div>
 
@@ -123,7 +123,7 @@ const OrderSuccess = () => {
                     </p>
 
                     <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
-                      ₹{Number(order.total || 0).toLocaleString("en-IN")}
+                      ₹{Number(order[0].total || 0).toLocaleString("en-IN")}
                     </p>
                   </div>
 
@@ -134,7 +134,7 @@ const OrderSuccess = () => {
                     </p>
 
                     <p className="font-semibold text-gray-900 mt-1 capitalize">
-                      {order.payment === "cod"
+                      {order[0].payment === "cod"
                         ? "Cash on Delivery"
                         : "Online Payment"}
                     </p>

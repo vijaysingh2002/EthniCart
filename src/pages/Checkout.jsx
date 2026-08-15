@@ -20,8 +20,6 @@ import {
 import { CartContext } from "../context/CartContext";
 import { AuthContext } from "../context/AuthContext";
 
-const API_URL = "https://ethnicart.onrender.com/api";
-
 const Checkout = () => {
   const {
     cart,
@@ -35,6 +33,7 @@ const Checkout = () => {
 
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL;
   // =========================
   // DELIVERY FORM
   // =========================
@@ -520,13 +519,28 @@ const Checkout = () => {
                       setPayment(e.target.value)
                     }
                     className="accent-[#C49A6C]"
+                    disabled
                   />
 
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900">
                       Online Payment
                     </p>
-
+                    <span
+                      className="
+                        text-[10px] sm:text-xs
+                        font-bold
+                        uppercase
+                        tracking-wide
+                        px-2 py-1
+                        rounded-full
+                        bg-[#C49A6C]/10
+                        text-[#A98259]
+                        whitespace-nowrap
+                      "
+                    >
+                      Coming Soon
+                    </span>
                     <p className="text-xs text-gray-500 mt-1">
                       Pay securely online.
                     </p>

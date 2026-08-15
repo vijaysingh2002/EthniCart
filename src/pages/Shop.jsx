@@ -8,7 +8,7 @@ import {
 
 import ProductCard from "../components/Product/ProductCard";
 
-const API_URL = "https://ethnicart.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -18,7 +18,7 @@ const Shop = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const categories = ["All", "Kurtas", "Sarees", "Lehengas"];
+  const categories = ["All", "Saree", "Lehenga", "Suit"];
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -89,33 +89,53 @@ const Shop = () => {
   if (loading) {
     return (
       <main className="min-h-screen bg-[#FAF9F7]">
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="animate-pulse">
-            <div className="h-3 w-24 bg-gray-200 rounded mb-4" />
-            <div className="h-10 w-32 bg-gray-200 rounded-lg mb-3" />
-            <div className="h-4 w-72 bg-gray-200 rounded mb-8" />
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
 
-            <div className="h-14 bg-white rounded-2xl border border-gray-100 mb-5" />
-
-            <div className="h-14 bg-white rounded-2xl border border-gray-100 mb-8" />
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                <div
-                  key={item}
-                  className="bg-white rounded-2xl overflow-hidden"
-                >
-                  <div className="aspect-[4/5] bg-gray-200" />
-
-                  <div className="p-4">
-                    <div className="h-3 w-16 bg-gray-200 rounded mb-3" />
-                    <div className="h-4 w-4/5 bg-gray-200 rounded mb-3" />
-                    <div className="h-4 w-16 bg-gray-200 rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Header Skeleton */}
+          <div className="animate-pulse mb-8">
+            <div className="h-3 w-32 bg-gray-200 rounded mb-3" />
+            <div className="h-9 w-28 bg-gray-200 rounded-lg mb-3" />
+            <div className="h-4 w-72 bg-gray-200 rounded" />
           </div>
+
+          {/* Search Skeleton */}
+          <div className="h-14 bg-gray-200 rounded-2xl mb-5 animate-pulse" />
+
+          {/* Filter Skeleton */}
+          <div className="flex justify-between items-center mb-8 animate-pulse">
+            <div className="flex gap-5">
+              <div className="h-5 w-14 bg-gray-200 rounded" />
+              <div className="h-5 w-20 bg-gray-200 rounded" />
+              <div className="h-5 w-20 bg-gray-200 rounded" />
+            </div>
+
+            <div className="h-11 w-40 bg-gray-200 rounded-xl" />
+          </div>
+
+          {/* Product Skeletons */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse"
+              >
+                {/* Product Image */}
+                <div className="aspect-[4/5] bg-gray-200" />
+
+                {/* Product Info */}
+                <div className="p-4">
+                  <div className="h-3 w-16 bg-gray-200 rounded mb-3" />
+
+                  <div className="h-4 w-4/5 bg-gray-200 rounded mb-3" />
+
+                  <div className="h-4 w-20 bg-gray-200 rounded mb-4" />
+
+                  <div className="h-10 w-full bg-gray-200 rounded-xl" />
+                </div>
+              </div>
+            ))}
+          </div>
+
         </section>
       </main>
     );
@@ -179,14 +199,6 @@ const Shop = () => {
               Explore our latest ethnic collection.
             </p>
           </div>
-
-          <p className="text-sm text-gray-500">
-            <span className="font-bold text-gray-900">
-              {filteredProducts.length}
-            </span>{" "}
-            {filteredProducts.length === 1 ? "Product" : "Products"}
-          </p>
-
         </div>
 
         {/* =================================================

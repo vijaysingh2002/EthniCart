@@ -7,6 +7,8 @@ const INITIAL_ORDERS = [];
 
 const INITIAL_CUSTOMERS = [];
 
+const PRODUCT_CATEGORIES = ["Saree", "Lehenga", "Suit"];
+
 export default function AdminLayout() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(
@@ -18,10 +20,13 @@ export default function AdminLayout() {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState(INITIAL_ORDERS);
   const [customers, setCustomers] = useState([]);
-  const [loadingCustomers, setLoadingCustomers] = useState(false);
+
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingCustomers, setLoadingCustomers] = useState(true);
 
   // Form & Image Upload States
-  const [newProd, setNewProd] = useState({ name: "", price: "", oldPrice: "", category: "", rating: "" });
+  const [newProd, setNewProd] = useState({ name: "", price: "", oldPrice: "", category: "", rating: "", stock: "", badge: "", description: "" });
   const [newProdFile, setNewProdFile] = useState(null);
   const [newProdPreview, setNewProdPreview] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -35,7 +40,7 @@ export default function AdminLayout() {
   const [showItemsModal, setShowItemsModal] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
-  const API_URL = "https://ethnicart.onrender.com/api";
+  const API_URL = import.meta.env.VITE_API_URL;
 
   //GET USERS FROM BACKEND
   useEffect(() => {
@@ -49,9 +54,8 @@ export default function AdminLayout() {
           console.error("No authentication token found");
           return;
         }*/
-
-        const response = await fetch(
-          "https://ethnicart.onrender.com/api/users",
+        //
+        const response = await fetch( `${API_URL}/users`,
           {
             method: "GET",
             headers: {
@@ -82,7 +86,9 @@ export default function AdminLayout() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("https://ethnicart.onrender.com/api/products");
+        setLoadingProducts(true);
+
+        const response = await fetch(`${API_URL}/products`);
 
         const data = await response.json();
 
@@ -93,12 +99,13 @@ export default function AdminLayout() {
         setProducts(data.products);
       } catch (error) {
         console.error("Fetch products error:", error);
+      } finally {
+        setLoadingProducts(false);
       }
     };
     fetchProducts();
   }, []);
 
-  console.log(products.length)
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     sessionStorage.setItem("adminActiveTab", tab);
@@ -176,7 +183,7 @@ export default function AdminLayout() {
 
     try {
       const response = await fetch(
-        `${"https://ethnicart.onrender.com/api/products"}/${id}`,
+        `${`${API_URL}/products`}/${id}`,
         {
           method: "DELETE",
         }
@@ -204,6 +211,7 @@ export default function AdminLayout() {
 
   const fetchOrders = async () => {
     try {
+      setLoadingOrders(true);
       /*const token = localStorage.getItem("token");
       
       if (!token) {
@@ -216,7 +224,6 @@ export default function AdminLayout() {
       );
 
       const data = await response.json();
-      console.log(data);
 
       if (!response.ok) {
         throw new Error(
@@ -227,6 +234,8 @@ export default function AdminLayout() {
       setOrders(data.orders || []);
     } catch (error) {
       console.error("Fetch orders error:", error);
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
@@ -288,14 +297,14 @@ export default function AdminLayout() {
       formData.append("name", newProd.name);
       formData.append("price", newProd.price || "");
       formData.append("oldPrice", newProd.oldPrice || "");
+      formData.append("stock", newProd.stock || "0");
       formData.append("rating", newProd.rating || "0");
       formData.append("category", newProd.category || "");
       formData.append("badge", newProd.badge || "");
       formData.append("description", newProd.description || "");
-
       formData.append("image", newProdFile);
 
-      const response = await fetch("http://localhost:8000/api/products", {
+      const response = await fetch(`${API_URL}/products`, {
         method: "POST",
         body: formData,
       });
@@ -312,6 +321,7 @@ export default function AdminLayout() {
         name: "",
         price: "",
         oldPrice: "",
+        stock: "",
         rating: "",
         category: "",
         badge: "",
@@ -375,6 +385,13 @@ export default function AdminLayout() {
       );
 
       formData.append(
+        "stock",
+        editingProd.stock !== null && editingProd.stock !== undefined
+          ? editingProd.stock
+          : "0"
+      );
+
+      formData.append(
         "rating",
         editingProd.rating !== null && editingProd.rating !== undefined
           ? editingProd.rating
@@ -396,7 +413,7 @@ export default function AdminLayout() {
       }
 
       const response = await fetch(
-        `${"https://ethnicart.onrender.com/api/products"}/${editingProd.id}`,
+        `${`${API_URL}/products`}/${editingProd.id}`,
         {
           method: "PUT",
           body: formData,
@@ -441,7 +458,11 @@ export default function AdminLayout() {
       0
     )
     .toFixed(2);
-  const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+
+  const totalStock = products.reduce(
+    (sum, p) => sum + Number(p.stock || 0),
+    0
+  );
 
   const validOrders = orders.filter(
     (order) => order.status !== "Cancelled"
@@ -630,11 +651,12 @@ export default function AdminLayout() {
               <StatCard title="Total Orders" value={orders.length} trend="+5 new today" color="border-blue-500" />
               <StatCard title="Total Products" value={products.length} trend={`Check product page for more`} color="border-amber-500" />
               <StatCard title="Total Customers" value={customers.length} trend="+2 new this week" color="border-purple-500" />
+              <StatCard title="Total Stock" value={totalStock} trend="Available inventory" color="border-orange-500"/>
              </div>
 
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Orders</h3>
-              <OrdersTable orders={orders.slice(0, 3)} onStatusChange={handleOrderStatusChange} onDeliveryInfo={handleDeliveryInfo} onItemsInfo={handleItemsInfo} />
+              <OrdersTable orders={orders.slice(0, 3)} loading={loadingOrders} onStatusChange={handleOrderStatusChange} onDeliveryInfo={handleDeliveryInfo} onItemsInfo={handleItemsInfo} />
             </div>
           </div>
         )}
@@ -645,7 +667,7 @@ export default function AdminLayout() {
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-800">All Store Orders</h3>
             </div>
-            <OrdersTable orders={orders} onStatusChange={handleOrderStatusChange} onDeliveryInfo={handleDeliveryInfo} onItemsInfo={handleItemsInfo}/>
+            <OrdersTable orders={orders} onStatusChange={handleOrderStatusChange} loading={loadingOrders} onDeliveryInfo={handleDeliveryInfo} onItemsInfo={handleItemsInfo}/>
           </div>
         )}
 
@@ -670,13 +692,32 @@ export default function AdminLayout() {
                     <th className="py-3 px-4">Name</th>
                     <th className="py-3 px-4">Price</th>
                     <th className="py-3 px-4">Old Price</th>
+                    <th className="py-3 px-4">Stock</th>
                     <th className="py-3 px-4">Category</th>
                     <th className="py-3 px-4">Rating</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {products.map((p) => (
+                  {loadingProducts ? (
+                    <tr>
+                      <td colSpan="8" className="py-12 text-center">
+                        <div className="flex flex-col items-center justify-center">
+                          <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+                          <p className="mt-3 text-sm text-gray-500">
+                            Loading products...
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : products.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" className="py-12 text-center text-gray-500">
+                        No products found.
+                      </td>
+                    </tr>
+                  ) : (
+                  products.map((p) => (
                     <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
@@ -686,6 +727,19 @@ export default function AdminLayout() {
                       <td className="py-3.5 px-4 text-sm text-gray-600">{p.name}</td>
                       <td className="py-3.5 px-4 text-sm font-semibold text-gray-600">₹{p.price.toFixed(0)}</td>
                       <td className="py-3.5 px-4 text-sm text-gray-900">₹{p.oldPrice.toFixed(0)}</td>
+                      <td className="py-3.5 px-4 text-sm">
+                        <span
+                          className={`font-semibold ${
+                            p.stock <= 0
+                              ? "text-red-500"
+                              : p.stock <= 5
+                              ? "text-amber-500"
+                              : "text-emerald-600"
+                          }`}
+                        >
+                          {p.stock ?? 0}
+                        </span>
+                      </td>
                       <td className="py-3.5 px-4 text-sm">{p.category}</td>
                       <td className="py-3.5 px-4 text-sm">
                         <span className={`font-semibold ${p.rating < 3.5 ? "text-red-500" : "text-emerald-600"} `}>
@@ -709,7 +763,7 @@ export default function AdminLayout() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )))}
                 </tbody>
               </table>
             </div>
@@ -761,6 +815,28 @@ export default function AdminLayout() {
                       />
                     </div>
 
+                    
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">
+                        Stock Quantity
+                      </label>
+
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Available stock"
+                        value={newProd.stock}
+                        onChange={(e) =>
+                          setNewProd({
+                            ...newProd,
+                            stock: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">Badge</label>
                       <input
@@ -803,15 +879,32 @@ export default function AdminLayout() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
-                        <input
-                          type="text"
-                          placeholder="Category"
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">
+                          Category
+                        </label>
+
+                        <select
                           value={newProd.category}
-                          onChange={(e) => setNewProd({ ...newProd, category: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          onChange={(e) =>
+                            setNewProd({
+                              ...newProd,
+                              category: e.target.value,
+                            })
+                          }
                           required
-                        />
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg
+                                    text-sm bg-white
+                                    focus:ring-2 focus:ring-blue-500
+                                    focus:outline-none"
+                        >
+                          <option value="">Select Category</option>
+
+                          {PRODUCT_CATEGORIES.map((category) => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-gray-600 mb-1">Rating(Limit 5)</label>
@@ -889,13 +982,52 @@ export default function AdminLayout() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">
+                        Stock Quantity
+                      </label>
+
                       <input
-                        type="text"
-                        value={editingProd.category}
-                        onChange={(e) => setEditingProd({ ...editingProd, category: e.target.value })}
+                        type="number"
+                        min="0"
+                        value={editingProd.stock ?? 0}
+                        onChange={(e) =>
+                          setEditingProd({
+                            ...editingProd,
+                            stock: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        required
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">
+                        Category
+                      </label>
+
+                      <select
+                        value={editingProd.category || ""}
+                        onChange={(e) =>
+                          setEditingProd({
+                            ...editingProd,
+                            category: e.target.value,
+                          })
+                        }
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg
+                                  text-sm bg-white
+                                  focus:ring-2 focus:ring-blue-500
+                                  focus:outline-none"
+                      >
+                        <option value="">Select Category</option>
+
+                        {PRODUCT_CATEGORIES.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div>
@@ -1370,7 +1502,7 @@ function StatCard({ title, value, trend, color, onClick }) {
   );
 }
 
-function OrdersTable({ orders, onStatusChange, onDeliveryInfo, onItemsInfo,}) {
+function OrdersTable({ orders, loading, onStatusChange, onDeliveryInfo, onItemsInfo,}) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
       <table className="w-full text-left border-collapse min-w-[800px]">
@@ -1411,7 +1543,20 @@ function OrdersTable({ orders, onStatusChange, onDeliveryInfo, onItemsInfo,}) {
         </thead>
 
         <tbody className="divide-y divide-gray-100">
-          {orders.length === 0 ? (
+          {loading ? (
+            <tr>
+              <td colSpan="8" className="py-12 text-center">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+
+                  <p className="mt-3 text-sm text-gray-500">
+                    Loading orders...
+                  </p>
+                </div>
+              </td>
+            </tr>
+          ) :
+          orders.length === 0 ? (
             <tr>
               <td
                 colSpan="7"

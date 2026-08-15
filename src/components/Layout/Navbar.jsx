@@ -3,14 +3,16 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import {
   FiShoppingBag,
-  FiUser,
   FiLogOut,
+  FiLogIn,
+  FiUserPlus,
   FiHeart,
   FiMenu,
   FiX,
   FiPackage,
   FiHome,
   FiGrid,
+  FiUser,
 } from "react-icons/fi";
 
 import { CartContext } from "../../context/CartContext";
@@ -115,14 +117,6 @@ const Navbar = () => {
             </NavLink>
 
             <NavLink
-              to="/shop"
-              className={desktopNavClass}
-            >
-              <FiGrid size={17} />
-              Shop
-            </NavLink>
-
-            <NavLink
               to="/wishlist"
               className={desktopNavClass}
             >
@@ -223,22 +217,34 @@ const Navbar = () => {
 
                 </>
               ) : (
-                <Link
-                  to="/login"
-                  className="flex items-center gap-2 border border-[#C49A6C] text-[#C49A6C] px-4 py-2 rounded-xl font-semibold hover:bg-[#C49A6C] hover:text-white transition"
-                >
-                  <FiUser size={18} />
-                  Login
-                </Link>
-              )}
+                <div className="flex items-center gap-2">
+                  {/* LOGIN */}
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-2 border border-[#C49A6C] text-[#C49A6C] px-4 py-2 rounded-xl font-semibold hover:bg-[#C49A6C] hover:text-white transition"
+                  >
+                    <FiUser size={18} />
+                    Login
+                  </Link>
 
+                  {/* NEW USER */}
+                  <Link
+                    to="/register"
+                    className="flex items-center gap-2 bg-[#C49A6C] text-white px-4 py-2 rounded-xl font-semibold hover:bg-[#a98259] transition"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* =================================================
                 CART
             ================================================= */}
 
-            <Link
+            {user && (
+            <>
+              <Link
               to="/cart"
               className="relative w-10 h-10 sm:w-auto sm:px-4 rounded-xl bg-[#C49A6C] text-white flex items-center justify-center gap-2 hover:bg-[#a98259] transition shrink-0"
               aria-label="Shopping Cart"
@@ -255,6 +261,7 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+            </>)}
 
             {/* =================================================
                 MOBILE MENU BUTTON
@@ -297,26 +304,32 @@ const Navbar = () => {
               Home
             </NavLink>
 
-            {/* SHOP */}
-
-            <NavLink
-              to="/shop"
+            {!user && (<NavLink
+              to="/login"
               className={mobileNavClass}
             >
-              <FiGrid size={15} />
-              Shop
-            </NavLink>
+              <FiLogIn size={15} />
+              Login
+            </NavLink>)}
 
-            {/* WISHLIST */}
-
-            <NavLink
-              to="/wishlist"
+            {!user && (<NavLink
+              to="/register"
               className={mobileNavClass}
             >
-              <FiHeart size={15} />
-              Wishlist
-            </NavLink>
+              <FiUser size={15} />
+              SignUp
+            </NavLink>)}
 
+            {user && (
+              <NavLink
+                to="/wishlist"
+                className={mobileNavClass}
+              >
+                <FiHeart size={15} />
+                Wishlist
+              </NavLink>
+            )}
+            
             {/* ORDERS */}
 
             {user && (

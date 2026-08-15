@@ -73,6 +73,7 @@ import { CartContext } from "../context/CartContext";
 const Cart = () => {
   const {
     cart,
+    cartLoading,
     addToCart,
     decreaseQuantity,
     removeFromCart,
@@ -143,7 +144,34 @@ const Cart = () => {
         {/* ===================================================
             EMPTY CART
         =================================================== */}
-        {cart.length === 0 ? (
+        {cartLoading ? (
+          <div className="min-h-[50vh] flex items-center justify-center px-4">
+            <div className="text-center">
+
+              <div
+                className="
+                  w-10 h-10
+                  sm:w-12 sm:h-12
+                  mx-auto
+                  border-4
+                  border-gray-200
+                  border-t-[#C49A6C]
+                  rounded-full
+                  animate-spin
+                "
+              />
+
+              <h2 className="mt-5 text-base sm:text-lg font-semibold text-gray-800">
+                Loading cart...
+              </h2>
+
+              <p className="mt-1 text-xs sm:text-sm text-gray-400">
+                Please wait while we load your cart.
+              </p>
+
+            </div>
+          </div>
+        ) : cart.length === 0 ? (
 
           <div className="max-w-lg mx-auto">
 

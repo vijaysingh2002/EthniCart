@@ -45,10 +45,14 @@ const STATUS_ORDER = [
   "Delivered",
 ];
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const OrderDetails = () => {
   const { id } = useParams();
 
   const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelled, setCancelled] = useState(false);
 
@@ -60,12 +64,12 @@ const OrderDetails = () => {
     loadOrder();
   }, [id]);
 
-  const API_URL = "https://ethnicart.onrender.com/api";
-
   const token = localStorage.getItem("token");
 
   const loadOrder = async () => {
     try {
+      setLoading(true);
+
       const response = await fetch(
         `${API_URL}/orders/${id}`, 
         {
@@ -88,6 +92,8 @@ const OrderDetails = () => {
     } catch (error) {
       console.error("Failed to load order:", error);
       setOrder(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,6 +103,8 @@ const OrderDetails = () => {
 
   const handleCancelOrder = async () => {
     try {
+      setCancelLoading(true);
+
       const response = await fetch(
         `${API_URL}/orders/${id}/cancel`,
         {
@@ -108,7 +116,7 @@ const OrderDetails = () => {
       );
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(
           data.message || "Failed to cancel order"
@@ -121,6 +129,8 @@ const OrderDetails = () => {
     } catch (error) {
       console.error("Cancel order error:", error);
       alert(error.message);
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -149,6 +159,95 @@ const OrderDetails = () => {
   // =====================================================
   // ORDER NOT FOUND
   // =====================================================
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gray-50 py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+
+          <div className="animate-pulse">
+
+            {/* Header */}
+            <div className="bg-white border-b rounded-2xl p-6 md:p-10 mb-6">
+              <div className="h-4 w-28 bg-gray-200 rounded mb-6" />
+              <div className="h-4 w-24 bg-gray-200 rounded mb-3" />
+              <div className="h-10 w-52 bg-gray-200 rounded mb-4" />
+              <div className="h-4 w-80 bg-gray-200 rounded" />
+            </div>
+
+            {/* Status */}
+            <div className="bg-white rounded-2xl border p-6 mb-6">
+              <div className="flex justify-between">
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 bg-gray-200 rounded-xl" />
+
+                  <div className="space-y-3">
+                    <div className="h-5 w-48 bg-gray-200 rounded" />
+                    <div className="h-4 w-72 bg-gray-200 rounded" />
+                  </div>
+                </div>
+
+                <div className="h-9 w-24 bg-gray-200 rounded-full" />
+              </div>
+            </div>
+
+            {/* Main content */}
+            <div className="grid lg:grid-cols-3 gap-6">
+
+              {/* Products */}
+              <div className="lg:col-span-2 bg-white rounded-2xl border p-6">
+                <div className="h-6 w-40 bg-gray-200 rounded mb-6" />
+
+                <div className="space-y-4">
+                  {[1, 2].map((item) => (
+                    <div
+                      key={item}
+                      className="flex gap-4 p-3 border rounded-xl"
+                    >
+                      <div className="w-24 h-28 bg-gray-200 rounded-xl" />
+
+                      <div className="flex-1 space-y-3 pt-2">
+                        <div className="h-5 w-3/4 bg-gray-200 rounded" />
+                        <div className="h-3 w-20 bg-gray-200 rounded" />
+                        <div className="h-3 w-32 bg-gray-200 rounded" />
+                        <div className="h-5 w-24 bg-gray-200 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t mt-6 pt-5 flex justify-between">
+                  <div className="h-4 w-24 bg-gray-200 rounded" />
+                  <div className="h-7 w-28 bg-gray-200 rounded" />
+                </div>
+              </div>
+
+              {/* Right side */}
+              <div className="space-y-6">
+                <div className="bg-white rounded-2xl border p-6">
+                  <div className="h-6 w-24 bg-gray-200 rounded mb-6" />
+                  <div className="space-y-4">
+                    <div className="h-4 w-full bg-gray-200 rounded" />
+                    <div className="h-4 w-3/4 bg-gray-200 rounded" />
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border p-6">
+                  <div className="h-6 w-48 bg-gray-200 rounded mb-6" />
+                  <div className="space-y-3">
+                    <div className="h-4 w-40 bg-gray-200 rounded" />
+                    <div className="h-4 w-full bg-gray-200 rounded" />
+                    <div className="h-4 w-2/3 bg-gray-200 rounded" />
+                    <div className="h-4 w-1/2 bg-gray-200 rounded" />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (!order) {
     return (
@@ -220,11 +319,15 @@ const OrderDetails = () => {
               </span>
 
               <span className="text-sm text-gray-500">
-                {order.date
-                  ? new Date(order.date).toLocaleString(
-                      "en-IN"
-                    )
-                  : "Date unavailable"}
+                {order.createdAt
+                ? new Date(order.createdAt).toLocaleString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "N/A"}
               </span>
             </div>
           </div>
@@ -781,9 +884,31 @@ const OrderDetails = () => {
 
               <button
                 onClick={handleCancelOrder}
-                className="flex-1 bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700 transition"
+                disabled={cancelLoading}
+                className="
+                  flex-1
+                  bg-red-600
+                  text-white
+                  py-3
+                  rounded-xl
+                  font-semibold
+                  transition
+                  flex
+                  items-center
+                  justify-center
+                  gap-2
+                  disabled:opacity-70
+                  disabled:cursor-not-allowed
+                "
               >
-                Yes, Cancel
+                {cancelLoading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Cancelling...
+                  </>
+                ) : (
+                  "Yes, Cancel"
+                )}
               </button>
 
             </div>

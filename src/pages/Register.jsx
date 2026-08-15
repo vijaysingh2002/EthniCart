@@ -21,6 +21,7 @@ const Register = () => {
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({
@@ -41,28 +42,41 @@ const Register = () => {
       return;
     }
 
+    if (!/^[0-9]{10}$/.test(form.phone)) {
+      setError("Please enter a valid 10-digit phone number.");
+      return;
+    }
+
     // Password length
     if (form.password.length < 6) {
       setError("Password must be at least 6 characters.");
       return;
     }
 
-    // Register user
-    const result = await register(
-      form.name,
-      form.phone,
-      form.location,
-      form.email,
-      form.password
-    );
+    try {
+      setLoading(true);
 
-    if (!result.success) {
-      setError(result.message);
-      return;
+      const result = await register(
+        form.name,
+        form.phone,
+        form.location,
+        form.email,
+        form.password
+      );
+
+      if (!result.success) {
+        setError(result.message);
+        return;
+      }
+
+      // Registration successful
+      navigate("/");
+    } catch (error) {
+      console.error("Registration error:", error);
+      setError("Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    // Registration successful
-    navigate("/shop");
   };
 
   return (
@@ -314,9 +328,21 @@ const Register = () => {
 
               <button
                 type="submit"
-                className="w-full bg-[#C49A6C] hover:bg-[#b78958] text-white py-4 rounded-xl font-semibold transition"
+                disabled={loading}
+                className={`w-full py-4 rounded-xl font-semibold text-white transition flex items-center justify-center gap-3 ${
+                  loading
+                    ? "bg-[#C49A6C]/70 cursor-not-allowed"
+                    : "bg-[#C49A6C] hover:bg-[#b78958]"
+                }`}
               >
-                Create Account
+                {loading ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                    Creating Account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
               </button>
 
             </form>

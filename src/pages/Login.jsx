@@ -47,7 +47,7 @@ const Login = () => {
       }
 
       // Redirect to previous page or shop
-      const from = location.state?.from || "/shop";
+      const from = location.state?.from || "/";
 
       navigate(from, { replace: true });
     } catch (error) {
@@ -200,9 +200,21 @@ const Login = () => {
               {/* Login */}
               <button
                 type="submit"
-                className="w-full bg-[#C49A6C] hover:bg-[#b78958] text-white py-4 rounded-xl font-semibold transition"
+                disabled={loading}
+                className={`w-full py-4 rounded-xl font-semibold text-white transition flex items-center justify-center gap-3 ${
+                  loading
+                    ? "bg-[#C49A6C]/70 cursor-not-allowed"
+                    : "bg-[#C49A6C] hover:bg-[#b78958]"
+                }`}
               >
-                Login
+                {loading ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
               </button>
 
             </form>

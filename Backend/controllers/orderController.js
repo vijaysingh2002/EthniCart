@@ -1,6 +1,9 @@
 const Order = require("../models/Order");
+const mongoose = require("mongoose");
+const Product = require("../models/Product");
 
 const createOrder = async (req, res) => {
+  const session = await mongoose.startSession();
   try {
     const {
       userId,
@@ -10,6 +13,7 @@ const createOrder = async (req, res) => {
       payment,
     } = req.body;
 
+    
     if (
       !userId ||
       !customer ||
@@ -22,7 +26,49 @@ const createOrder = async (req, res) => {
       });
     }
 
-    const order = await Order.create({
+    session.startTransaction();
+
+    for (const item of items) {
+      const productId = item.id;
+      const quantity = Number(item.quantity);
+
+      if (!productId || !quantity || quantity <= 0) {
+        await session.abortTransaction();
+
+        return res.status(400).json({
+          success: false,
+          message: "Invalid product or quantity in order",
+        });
+      }
+
+      const product = await Product.findOneAndUpdate(
+        {
+          _id: productId,
+          stock: { $gte: quantity },
+        },
+        {
+          $inc: {
+            stock: -quantity,
+          },
+        },
+        {
+          returnDocument: "after",
+          session,
+        }
+      );
+
+      // Product doesn't exist OR insufficient stock
+      if (!product) {
+        await session.abortTransaction();
+
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for product ${productId}`,
+        });
+      }
+    }
+
+    const order = await Order.create([{
       orderId: `EC${Date.now()}`,
       userId,
       customer,
@@ -30,7 +76,9 @@ const createOrder = async (req, res) => {
       total,
       payment: payment || "cod",
       status: "Pending",
-    });
+    }],{session});
+
+    await session.commitTransaction();
 
     res.status(201).json({
       success: true,
@@ -38,12 +86,15 @@ const createOrder = async (req, res) => {
       order,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Create order error:", error);
 
     res.status(500).json({
       success: false,
       message: "Failed to create order",
     });
+  }  finally {
+    session.endSession();
   }
 };
 
@@ -96,12 +147,18 @@ const getOrderById = async (req, res) => {
 };
 
 const cancelOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  
   try {
+    session.startTransaction();
+    
     const order = await Order.findOne({
       orderId: req.params.id,
-    });
+    }).session(session);
 
     if (!order) {
+      await session.abortTransaction();
+
       return res.status(404).json({
         success: false,
         message: "Order not found",
@@ -113,16 +170,34 @@ const cancelOrder = async (req, res) => {
         order.status
       )
     ) {
+      await session.abortTransaction();
+
       return res.status(400).json({
         success: false,
         message: `Order cannot be cancelled when status is ${order.status}`,
       });
     }
 
+    for (const item of order.items) {
+      await Product.findByIdAndUpdate(
+        item.product,
+        {
+          $inc: {
+            stock: Number(item.quantity),
+          },
+        },
+        {
+          session,
+        }
+      );
+    }
+
     order.status = "Cancelled";
     order.cancelledAt = new Date();
 
-    await order.save();
+    await order.save({ session });
+
+    await session.commitTransaction();
 
     res.json({
       success: true,
@@ -132,10 +207,16 @@ const cancelOrder = async (req, res) => {
   } catch (error) {
     console.error("Cancel order error:", error);
 
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+
     res.status(500).json({
       success: false,
       message: "Failed to cancel order",
     });
+  } finally {
+    await session.endSession();
   }
 };
 
