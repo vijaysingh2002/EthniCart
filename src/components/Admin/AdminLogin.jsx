@@ -4,28 +4,62 @@ import { useNavigate } from "react-router-dom";
 function AdminLogin() {
     const navigate = useNavigate();
 
-    const [email, setEmail] = useState("");
+    const [mobile, setMobile] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
-    const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
 
-        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-            localStorage.setItem("adminAuth", "true");
+        setError("");
+        setLoading(true);
+
+        try {
+            const response = await fetch(
+                "http://localhost:8000/api/admin/login",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        mobile,
+                        password,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.message || "Not Authorized");
+                return;
+            }
+
+            // Store JWT token
+            localStorage.setItem("adminToken", data.token);
+
+            // Optional: store admin details
+            localStorage.setItem(
+                "admin",
+                JSON.stringify(data.admin)
+            );
+
             navigate("/adminpage");
-        } else {
-            setError("Not Authorized");
+
+        } catch (error) {
+            console.error("Login error:", error);
+            setError("Unable to connect to server");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-6">
             <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+
                 <h1 className="text-3xl sm:text-4xl font-bold text-center bg-gray-200 rounded-lg p-3 text-gray-800">
                     Welcome Back
                 </h1>
@@ -41,21 +75,24 @@ function AdminLogin() {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-5">
+
+                    {/* Mobile */}
                     <div>
                         <label className="mb-2 block text-sm font-medium text-gray-700">
-                            Email
+                            Mobile Number
                         </label>
 
                         <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email"
+                            type="tel"
+                            value={mobile}
+                            onChange={(e) => setMobile(e.target.value)}
+                            placeholder="Enter your mobile number"
                             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm sm:text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none"
                             required
                         />
                     </div>
 
+                    {/* Password */}
                     <div>
                         <label className="mb-2 block text-sm font-medium text-gray-700">
                             Password
@@ -71,12 +108,19 @@ function AdminLogin() {
                         />
                     </div>
 
+                    {/* Login button */}
                     <button
                         type="submit"
-                        className="w-full rounded-lg bg-blue-600 py-3 text-white font-semibold transition hover:bg-blue-700 active:scale-[0.98]"
+                        disabled={loading}
+                        className={`w-full rounded-lg py-3 text-white font-semibold transition active:scale-[0.98] ${
+                            loading
+                                ? "bg-blue-400 cursor-not-allowed"
+                                : "bg-blue-600 hover:bg-blue-700"
+                        }`}
                     >
-                        Login
+                        {loading ? "Logging in..." : "Login"}
                     </button>
+
                 </form>
             </div>
         </div>

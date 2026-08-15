@@ -91,7 +91,7 @@ const Register = () => {
         <div className="hidden md:flex relative">
 
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHgjoXb_2hmfLkbt5yaKi4My7PKTjV2CAsT7FDxS5bSg&s=10"
+            src="/register.jpeg"
             alt="Ethnic Fashion"
             className="w-full h-full object-cover"
           />

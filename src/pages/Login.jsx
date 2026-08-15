@@ -67,7 +67,7 @@ const Login = () => {
         <div className="hidden md:flex relative">
 
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw4wtJiH6LNxHgMWzwHA-TslLttwgZsNNAN2QE-eBeHw&s=10"
+            src="login.jpeg"
             alt="Fashion"
             className="w-full h-full object-cover"
           />

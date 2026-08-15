@@ -21,6 +21,7 @@ app.use(express.urlencoded({
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const adminRoutes = require("./routes/adminRoutes.js");
 
 app.use(
   "/api/users",
@@ -36,6 +37,8 @@ app.use(
   "/api/orders",
   orderRoutes
 );
+
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.json({
