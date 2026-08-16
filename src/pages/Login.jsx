@@ -12,6 +12,10 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [forgotPassword, setForgotPassword] = useState(false);
+  const [forgotPhone, setForgotPhone] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState("");
 
   const [form, setForm] = useState({
     phone: "",
@@ -27,6 +31,45 @@ const Login = () => {
     });
 
     setError("");
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+
+    setForgotLoading(true);
+    setForgotMessage("");
+    setError("");
+  
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/forgot-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone: forgotPhone,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      console.log(data);
+      if (!response.ok) {
+        setError(data.message || "Something went wrong");
+        return;
+      }
+
+      setForgotMessage(
+        "A password reset link has been sent to your registered email address. Please check your email."
+      );
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      setError("Unable to send reset link. Please try again.");
+    } finally {
+      setForgotLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -98,7 +141,7 @@ const Login = () => {
           <div className="w-full">
 
             {/* Heading */}
-            <div className="mb-10">
+            {!forgotLoading && <div className="mb-10">
 
               <h2 className="text-4xl font-bold text-gray-800">
                 Sign In
@@ -108,7 +151,7 @@ const Login = () => {
                 Login to continue shopping.
               </p>
 
-            </div>
+            </div>}
 
             {/* Error */}
             {error && (
@@ -117,7 +160,79 @@ const Login = () => {
               </div>
             )}
 
-            <form
+            {forgotPassword ? (
+              <form
+                onSubmit={handleForgotPassword}
+                className="space-y-6"
+              >
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    Forgot Password?
+                  </h3>
+
+                  <p className="text-gray-500 mt-2">
+                    Enter your registered phone number and we'll send
+                    you a password reset link.
+                  </p>
+                </div>
+
+                {forgotMessage && (
+                  <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-green-600 text-sm">
+                    {forgotMessage}
+                  </div>
+                )}
+
+                {error && (
+                  <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-600 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block mb-2 font-medium text-gray-700">
+                    Phone Number
+                  </label>
+                <input
+                    type="tel"
+                    placeholder="Enter your registered phone number"
+                    value={forgotPhone}
+                    onChange={(e) => setForgotPhone(e.target.value)}
+                    required
+                    className="w-full border border-gray-300 rounded-xl px-5 py-4 outline-none focus:ring-2 focus:ring-[#C49A6C]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className={`w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-3 ${
+                    forgotLoading
+                      ? "bg-[#C49A6C]/70 cursor-not-allowed"
+                      : "bg-[#C49A6C] hover:bg-[#b78958]"
+                  }`}
+                >
+                  {forgotLoading ? (
+                    <>
+                      <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                      Sending...
+                    </>
+                  ) : (
+                    "Send Reset Link"
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotPassword(false);
+                    setForgotMessage("");
+                    setError("");
+                  }}
+                  className="w-full text-sm text-gray-600 hover:text-[#C49A6C]"
+                  >
+                  ← Back to Login
+                </button>
+              </form>
+      ) : (<form
               onSubmit={handleSubmit}
               className="space-y-6"
             >
@@ -195,6 +310,18 @@ const Login = () => {
 
                 </label>
 
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotPassword(true);
+                    setError("");
+                    setForgotMessage("");
+                  }}
+                  className="text-sm font-medium text-[#C49A6C] hover:underline"
+                >
+                  Forgot Password?
+                </button>
+
               </div>
 
               {/* Login */}
@@ -217,7 +344,7 @@ const Login = () => {
                 )}
               </button>
 
-            </form>
+            </form>)}
 
             {/* Divider */}
             <div className="flex items-center my-8">

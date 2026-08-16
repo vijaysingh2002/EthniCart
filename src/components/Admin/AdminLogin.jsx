@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function AdminLogin() {
@@ -9,6 +9,13 @@ function AdminLogin() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const token = localStorage.getItem("adminToken");
+    
+    useEffect(() =>{
+        if(token) {
+        navigate("/adminpage")
+    }
+    },[])
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -40,6 +47,7 @@ function AdminLogin() {
 
             // Store JWT token
             localStorage.setItem("adminToken", data.token);
+            localStorage.setItem("admin", JSON.stringify(data.admin));
 
             // Optional: store admin details
             localStorage.setItem(

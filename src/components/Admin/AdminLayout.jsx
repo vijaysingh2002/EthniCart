@@ -48,12 +48,12 @@ export default function AdminLayout() {
       try {
         setLoadingCustomers(true);
 
-        /*const token = localStorage.getItem("token");
+        const token = localStorage.getItem("adminToken");
 
         if (!token) {
           console.error("No authentication token found");
           return;
-        }*/
+        }
         //
         const response = await fetch( `${API_URL}/users`,
           {
@@ -113,8 +113,10 @@ export default function AdminLayout() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("adminAuth");
-    navigate("/");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("admin");
+    console.log("navigating to admin")
+    navigate("/admin");
   };
 
   const handleItemsInfo = (order) => {
@@ -132,7 +134,7 @@ export default function AdminLayout() {
     newStatus
   ) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("adminToken");
 
       const response = await fetch(
         `${API_URL}/orders/${orderId}/status`,
@@ -212,12 +214,12 @@ export default function AdminLayout() {
   const fetchOrders = async () => {
     try {
       setLoadingOrders(true);
-      /*const token = localStorage.getItem("token");
+      const token = localStorage.getItem("adminToken");
       
       if (!token) {
         console.error("Admin token not found");
         return;
-      }*/
+      }
 
       const response = await fetch(
         `${API_URL}/orders/admin`,

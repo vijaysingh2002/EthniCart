@@ -1,13 +1,13 @@
 import { Navigate } from "react-router-dom";
 
-function ProtectedRoute({ children }) {
-    const isAuthenticated = localStorage.getItem("adminAuth");
+function AdminProtectedRoute({ children }) {
+    const token = localStorage.getItem("adminToken");
 
-    if (!isAuthenticated) {
+    if (!token) {
         return <Navigate to="/admin" replace />;
-    } 
+    }
 
     return children;
 }
 
-export default ProtectedRoute;
+export default AdminProtectedRoute;

@@ -86,7 +86,10 @@ const orderSchema = new mongoose.Schema(
       enum: ["cod", "online"],
       default: "cod",
     },
-
+    stockRestored: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       enum: [

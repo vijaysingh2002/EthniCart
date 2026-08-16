@@ -10,6 +10,7 @@ const {
 } = require("../controllers/orderController");
 
 const protect = require("../middleware/authMiddleware");
+const adminProtect = require("../middleware/adminProtect");
 
 const router = express.Router();
 
@@ -25,8 +26,6 @@ router.put(
   cancelOrder
 );
 
-
-
-router.put("/:id/status", protect, updateOrderStatus);
+router.put("/:id/status", adminProtect, updateOrderStatus);
 
 module.exports = router;

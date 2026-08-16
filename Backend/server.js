@@ -22,6 +22,7 @@ const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require("./routes/adminRoutes.js");
+const authRoutes = require("./routes/authRoutes.js");
 
 app.use(
   "/api/users",
@@ -39,6 +40,7 @@ app.use(
 );
 
 app.use("/api/admin", adminRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
   res.json({

@@ -26,6 +26,8 @@ import OrderSuccess from "./pages/OrderSuccess";
 import Addresses from "./pages/Addresses";
 import AccountSettings from "./pages/AccountSettings";
 import HelpSupport from "./pages/HelpSupport";
+import ResetPassword from "./pages/ResetPassword";
+import InstallApp from "./pages/InstallApp";
 
 // Profile
 import Profile from "./components/Home/Profile";
@@ -50,8 +52,9 @@ const UserLayout = () => {
       <main className="flex-1">
         <Outlet />
       </main>
-
+      
       <Footer />
+      <InstallApp />
     </div>
   );
 };
@@ -83,6 +86,8 @@ function App() {
           <Route path="/login" element={<Login />} />
 
           <Route path="/register" element={<Register />} />
+
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* =========================
               PROTECTED USER ROUTES
@@ -140,6 +145,7 @@ function App() {
             }
           />
 
+          
           <Route
             path="/order-success"
             element={

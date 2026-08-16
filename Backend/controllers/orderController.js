@@ -2,6 +2,14 @@ const Order = require("../models/Order");
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
 
+const {
+  sendNewOrderUserEmail,
+  sendNewOrderAdminEmail,
+  sendOrderStatusEmail,
+  sendOrderCancelledUserEmail,
+  sendOrderCancelledAdminEmail,
+} = require("../utils/sendOrderEmail");
+
 const createOrder = async (req, res) => {
   const session = await mongoose.startSession();
   try {
@@ -80,6 +88,14 @@ const createOrder = async (req, res) => {
 
     await session.commitTransaction();
 
+    const createdOrder = order[0];
+
+    // Send emails AFTER successful database transaction
+    await Promise.allSettled([
+      sendNewOrderUserEmail(createdOrder),
+      sendNewOrderAdminEmail(createdOrder),
+    ]);
+
     res.status(201).json({
       success: true,
       message: "Order placed successfully",
@@ -94,7 +110,7 @@ const createOrder = async (req, res) => {
       message: "Failed to create order",
     });
   }  finally {
-    session.endSession();
+      await session.endSession();
   }
 };
 
@@ -180,7 +196,7 @@ const cancelOrder = async (req, res) => {
 
     for (const item of order.items) {
       await Product.findByIdAndUpdate(
-        item.product,
+        item.id, //item.product
         {
           $inc: {
             stock: Number(item.quantity),
@@ -194,10 +210,17 @@ const cancelOrder = async (req, res) => {
 
     order.status = "Cancelled";
     order.cancelledAt = new Date();
+    order.stockRestored = true;
+    
 
     await order.save({ session });
 
     await session.commitTransaction();
+
+    await Promise.allSettled([
+      sendOrderCancelledUserEmail(order),
+      sendOrderCancelledAdminEmail(order),
+    ]);
 
     res.json({
       success: true,
@@ -242,6 +265,8 @@ const getAllOrders = async (req, res) => {
 
 const updateOrderStatus = async (req, res) => {
   try {
+    const session = await mongoose.startSession();
+
     const { id } = req.params;
     const { status } = req.body;
 
@@ -261,24 +286,88 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
+    session.startTransaction();
+
     const order = await Order.findOne({
       orderId: id,
-    });
+    }).session(session);
 
     if (!order) {
+      await session.abortTransaction();
+
       return res.status(404).json({
         success: false,
         message: "Order not found",
       });
     }
 
-    order.status = status;
+    const oldStatus = order.status;
+
+    if (oldStatus === status) {
+      await session.abortTransaction();
+
+      return res.status(200).json({
+        success: true,
+        message: "Order status is already " + status,
+        order,
+      });
+    }
+
+    if (oldStatus === "Cancelled") {
+      await session.abortTransaction();
+
+      return res.status(400).json({
+        success: false,
+        message: "A cancelled order cannot be reactivated",
+      });
+    }
+
+    if (status === "Cancelled") {
+      // Restore stock only once
+      if (!order.stockRestored) {
+        for (const item of order.items) {
+          await Product.findByIdAndUpdate(
+            item.id,
+            {
+              $inc: {
+                stock: Number(item.quantity),
+              },
+            },
+            {
+              session,
+            }
+          );
+        }
+
+        order.stockRestored = true;
+      }
+
+      order.cancelledAt = new Date();
+    }
 
     if (status !== "Cancelled") {
       order.cancelledAt = null;
+    } else {
+      order.cancelledAt = new Date();
     }
 
-    await order.save();
+    order.status = status;
+
+    await order.save({ session });
+
+    await session.commitTransaction();
+
+    if (status !== "Cancelled") {
+      await sendOrderStatusEmail(order, oldStatus);
+    }
+
+    // Cancellation → USER + ADMIN
+    if (status === "Cancelled") {
+      await Promise.allSettled([
+        sendOrderCancelledUserEmail(order),
+        sendOrderCancelledAdminEmail(order),
+      ]);
+    }
 
     res.status(200).json({
       success: true,
@@ -288,11 +377,17 @@ const updateOrderStatus = async (req, res) => {
   } catch (error) {
     console.error("Update order status error:", error);
 
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+
     res.status(500).json({
       success: false,
       message: "Failed to update order status",
     });
-  }
+    } finally {
+      await session.endSession();
+    }
 };
 
 module.exports = {
